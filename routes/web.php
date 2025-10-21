@@ -7,4 +7,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/',[Home::class,'index']);
 Route::get('/test',[Home::class, 'test']);
-Route::get('/dashboard',[Dashboard::class, 'show']);
+Route::post('/upload',[Home::class, 'upload'])->name('upload');
+Route::get('/calculate',[Home::class, 'calculate'])->name('calculate');
+//Route::get('/dashboard',[Dashboard::class, 'show']);

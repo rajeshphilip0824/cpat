@@ -6,18 +6,79 @@ use App\Services\Corrison;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class Home extends Controller
 {
-    public function index(Corrison $service){
-        $labels = range(1, 200);
+    public function index(){
+        return view('upload');
+    }
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'pc' => 'nullable|file|max:2048',
+            'cm1' => 'nullable|file|max:4096',
+            'cm2' => 'nullable|file|max:2048',
+        ]);
 
-        $data = $service->calculate();
+        $paths = [];
+
+        // Handle file1
+        if ($request->hasFile('pc')) {
+            $paths['pc'] = basename($request->file('pc')->store('pc', 'public'));
+            $pcid = DB::table('files')->insertGetId([
+                'type'=>'pc',
+                'file'=>$paths['pc']
+            ]);
+            $pc = [$pcid,$paths['pc']];
+        }
+
+        // Handle file2
+        if ($request->hasFile('cm1')) {
+            $paths['cm1'] = basename($request->file('cm1')->store('cm1', 'public'));
+
+            $cm1id = DB::table('files')->insertGetId([
+                'type'=>'cm1',
+                'file'=>$paths['cm1']
+            ]);
+            $cm1 = [$cm1id,$paths['cm1']];
+        }
+
+        // Handle file3
+        if ($request->hasFile('cm2')) {
+            $paths['cm2'] = basename($request->file('cm2')->store('cm2', 'public'));
+            $cm2id = DB::table('files')->insertGetId([
+                'type'=>'cm2',
+                'file'=>$paths['cm2']
+            ]);
+            $cm2 = [$cm2id,$paths['cm2']];
+        }
+        Session::put('thickness',$request->thickness);
+        Session::put('pcValue',$pc[0]);
+        Session::put('cm1Value',$cm1[0]);
+        Session::put('cm2Value',$cm2[0]);
+        $this->test($pc,$cm1,$cm2);
+        return redirect()->route('calculate');
+    }
+    public function calculate(Corrison $service){
+
+        $thickness = Session::get('thickness');
+        Session::forget('thickness');
+        $data = $service->calculate($thickness);
         $blueLine = $data[5]; // Example data
+        $labels = range(1, count($data[5]));
         $orangeLine = $data[6];
+        $orangeLine = array_map(function($v) {
+            if (is_infinite($v)) {
+                return 0; // or 0 if you want a number
+            }
+            return $v;
+        }, $orangeLine);
+        //dd($data);
         return view('welcome',compact('data','labels','blueLine','orangeLine'));
     }
-    public function test(){
+    public function test($pcA,$cm1A,$cm2A){
+        //dd($pc[0],$cm1,$cm2);
         DB::beginTransaction();
 
         try{
@@ -25,17 +86,16 @@ class Home extends Controller
 
         $pc = array_map(function($line) {
             return str_getcsv($line, "\t");
-        }, file(storage_path('app/public/PC.txt')));
+        }, file(storage_path('app/public/pc/'.$pcA[1])));
         $cm1 = array_map(function($line) {
             return str_getcsv($line, "\t");
-        }, file(storage_path('app/public/CM1.txt')));
+        }, file(storage_path('app/public/cm1/'.$cm1A[1])));
          $cm2 = array_map(function($line) {
             return str_getcsv($line, "\t");
-        }, file(storage_path('app/public/cm2.txt')));
+        }, file(storage_path('app/public/cm2/'.$cm2A[1])));
         array_shift($pc[0]);
         $countRowPC = count($pc[0]);
-
-         foreach ($pc as $key => $row) {
+        foreach ($pc as $key => $row) {
             $rowCount = 1;
             $pcValues = [];
             if($key > 0){
@@ -50,6 +110,7 @@ class Home extends Controller
                     throw new Exception('Invalid Row Count',500);
                 }
                 DB::table('pc_reading')->insert([
+                    'file_id'=>$pcA[0],
                     'angle' => $row[0],
                     'amplitude' => json_encode($pcValues),
                    // 'cm1' => json_encode($cmValues)
@@ -103,6 +164,7 @@ class Home extends Controller
                     throw new Exception('Invalid Row Count',500);
                 } */
                  DB::table('cm1_reading')->insert([
+                    'file_id'=>$cm1A[0],
                     'angle' => 0.00,
                     'amplitude' => json_encode($pcValues),
                    // 'cm1' => json_encode($cmValues)
@@ -134,6 +196,7 @@ class Home extends Controller
                     throw new Exception('Invalid Row Count',500);
                 } */
                  DB::table('cm2_reading')->insert([
+                    'file_id'=>$cm2A[0],
                     'angle' => 0.00,
                     'amplitude' => json_encode($pcValues),
                    // 'cm1' => json_encode($cmValues)

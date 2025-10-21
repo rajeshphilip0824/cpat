@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class Corrison
 {
@@ -12,7 +13,7 @@ class Corrison
     private $wall_loss_unit;
     private $remaining_wall_unit;
     private $remaining_wall_percentage;
-    private $nominal_weight = 12.79;
+    private $nominal_weight = 10;
     private $avg_remaining_wall_percentage;
     private $avg_remaining_wall_graph;
     private $avg_remaining_wall_unit;
@@ -36,9 +37,9 @@ class Corrison
 
 
     }
-    public function calculate()
+    public function calculate($thickness)
     {
-
+        $this->nominal_weight = $thickness;
         $this->wall_loss_percentage = $this->calculateWallLossPercentage($this->a_scan_max);
         if (!is_array($this->wall_loss_percentage) && count($this->wall_loss_percentage)) {
             throw new Exception('Wall Percentage return empty array');
@@ -215,7 +216,7 @@ class Corrison
         return $result;
     }
 
-    public function calculateCMAvg(array $data, int $windowSize = 11, bool $strict = false)
+    public function calculateCMAvg(array $data, int $windowSize = 10, bool $strict = false)
     {
         $result = [];
         $count = count($data);
@@ -301,9 +302,10 @@ class Corrison
     public function calculateAScanMax()
     {
 
-
+        $id = Session::get('pcValue');
+        Session::forget('pcValue');
         // Fetch all rows as collections of objects
-        $rows = DB::table('pc_reading')->select('amplitude')->get();
+        $rows = DB::table('pc_reading')->select('amplitude')->where('file_id',$id)->get();
 
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array
@@ -316,7 +318,7 @@ class Corrison
         // dd($data);
         $numCols = count($data[0]);
         $result = [];
-
+       // dd($numCols);
         for ($col = 0; $col < $numCols; $col++) {
             $validValues = [];
             foreach ($data as $row) {
@@ -338,9 +340,10 @@ class Corrison
     public function calculateCM1()
     {
 
-
+         $id = Session::get('cm1Value');
+        Session::forget('cm1Value');
         // Fetch all rows as collections of objects
-        $rows = DB::table('cm1_reading')->select('amplitude')->get();
+        $rows = DB::table('cm1_reading')->select('amplitude')->where('file_id',$id)->get();
         //dd($rows);
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array
@@ -370,15 +373,18 @@ class Corrison
             }
         }
         $this->cm1 = $result;
-        //dd($result); // Dump the result for debugging or use it further
+       // dd($result); // Dump the result for debugging or use it further
 
     }
     public function calculateCM2()
     {
 
 
+         $id = Session::get('cm2Value');
+        Session::forget('cm2Value');
+
         // Fetch all rows as collections of objects
-        $rows = DB::table('cm2_reading')->select('amplitude')->get();
+        $rows = DB::table('cm2_reading')->select('amplitude')->where('file_id',$id)->get();
 
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array

@@ -1530,72 +1530,74 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <div>
-    <canvas id="myChart"></canvas>
-</div>
+    <div class="w-100" style="width: 100%; height: 600px;">
+        <canvas id="myChart"></canvas>
+    </div>
     <script>
-    const orangeLine = @json($orangeLine); // Array from controller
-    const labels = @json($labels);
+        const orangeLine = @json($orangeLine); // Array from controller
+        const labels = @json($labels);
 
-    const ctx = document.getElementById('myChart');
+        const ctx = document.getElementById('myChart');
 
-    new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: Array.from({length: 600}, (_, i) => i + 1),  // Labeling from 1 to 600
-        datasets: [
-            {
-                label: 'Blue Line',
-                data: @json($blueLine).map(v => v * 100), // You can apply a scaling if necessary
-                borderColor: 'blue',
-                yAxisID: 'y',
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels, // Labeling from 1 to 600
+                datasets: [{
+                        label: 'Blue Line',
+                        data: @json($blueLine).map(v => v * 100), // You can apply a scaling if necessary
+                        borderColor: 'blue',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Orange Line',
+                        data: orangeLine,
+                        borderColor: 'orange',
+                        yAxisID: 'y1',
+                    }
+                ]
             },
-            {
-                label: 'Orange Line',
-                data: orangeLine,
-                borderColor: 'orange',
-                yAxisID: 'y1',
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                stacked: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: labels.length,
+                        ticks: {
+                            stepSize: 50
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        min: 0, // Start from 0%
+                        max: 100,
+                        ticks: {
+                            callback: value => value + '%',
+                            stepSize: 10
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            stepSize: 5,
+                            max: 20
+                        }
+                    }
+                }
             }
-        ]
-    },
-    options: {
-        responsive: true,
-        interaction: {
-            mode: 'index',
-            intersect: false
-        },
-        stacked: false,
-        scales: {
-            x: {
-                type: 'linear',
-                position: 'bottom',
-                min: 0,
-                max: 600,  // Explicitly set max to 600 for the x-axis
-                ticks: {
-                    stepSize: 50  // Optional: to make the ticks more readable (every 50 units)
-                }
-            },
-            y: {
-                type: 'linear',
-                position: 'left',
-                ticks: {
-                    callback: function(value) { return value + '%'; },  // Add '%' sign to y-axis ticks
-                    max: 100,
-                    stepSize: 10
-                }
-            },
-            y1: {
-                type: 'linear',
-                position: 'right',
-                grid: { drawOnChartArea: false },
-                ticks: {
-                    stepSize: 5,
-                    max: 20
-                }
-            }
-        }
-    }
-});
+        });
     </script>
 </body>
 
