@@ -28,23 +28,23 @@
 
                 <div>
                     <label for="file1">Upload PC:</label><br>
-                    <input type="file" name="pc" id="file1"><br><br>
+                    <input type="file" class="file-input" name="pc" id="file1"><br><br>
                 </div>
 
                 <div>
                     <label for="file2">Upload CM1:</label><br>
-                    <input type="file" name="cm1" id="file2"><br><br>
+                    <input type="file"   class="file-input" name="cm1" id="file2"><br><br>
                 </div>
 
                 <div>
                     <label for="file3">Upload Cm2:</label><br>
-                    <input type="file" name="cm2" id="file3"><br><br>
+                    <input type="file"  class="file-input" name="cm2" id="file3"><br><br>
                 </div>
                 <div>
                     <label for="thickness">Thickness</label><br>
-                    <input type="text" name="thickness" id="thickness"><br><br>
+                    <input type="text"  class="input" name="thickness" id="thickness"><br><br>
                 </div>
-                <button type="submit">Upload All</button>
+                <button class="btn btn-soft btn-primary" type="submit">Upload All</button>
 
         </div>
 
