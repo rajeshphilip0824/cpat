@@ -19,9 +19,7 @@
 </head>
 
 <body>
-    @if ($errors)
-    {{ $errors }}
-    @endif
+
     <section class="p-6 bg-gray-100">
 
         <div class="max-w-sm mx-auto">
