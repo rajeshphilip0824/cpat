@@ -9,4 +9,9 @@ Route::get('/',[Home::class,'index']);
 Route::get('/test',[Home::class, 'test']);
 Route::post('/upload',[Home::class, 'upload'])->name('upload');
 Route::get('/calculate',[Home::class, 'calculate'])->name('calculate');
+
+
+
+Route::get('/test1',[Home::class, 'test1']);
+Route::get('/calculateTest',[Home::class, 'calculateTest'])->name('calculateTest');
 //Route::get('/dashboard',[Dashboard::class, 'show']);
