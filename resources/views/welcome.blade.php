@@ -20,34 +20,39 @@
 <body>
 
 
-<div class="flex flex-wrap -mx-2">
-    <!-- Chart Column -->
-    <div class="w-full md:w-10/12 px-2 mb-4 md:mb-0">
-        <div class="w-full h-96 md:h-[500px]">
-            <canvas id="myChart" width="1000" class="w-full h-full"></canvas>
+    <div class="flex flex-wrap -mx-2">
+        <!-- Chart Column -->
+        <div class="w-full md:w-10/12 px-2 mb-4 md:mb-0">
+            <div class="w-full h-96 md:h-[500px]">
+                <canvas id="myChart" width="1000" class="w-full h-full"></canvas>
+            </div>
         </div>
-    </div>
-
-    <!-- Metrics Column -->
-    <!-- <div class="w-full md:w-2/12 px-2 flex flex-col justify-start space-y-2">
+        <div class="w-full md:w-10/12 px-2 mb-4 md:mb-0">
+            <div class="w-full h-96 md:h-[500px]">
+                <canvas id="myChart_filteredAvg" width="1000" class="w-full h-full"></canvas>
+            </div>
+        </div>
+        <!-- Metrics Column -->
+        <!-- <div class="w-full md:w-2/12 px-2 flex flex-col justify-start space-y-2">
     <div>Min RWT (AVG-mm) - {{ number_format($data[0],2) }}</div>
         <div>Min RWT (AVG-%) - {{ number_format($data[1],2) }}</div>
         <div>Scan Axis (AVG-mm) - {{ $data[2] }}</div>
         <div>CM Std Dev (dB) - {{ number_format($data[3],2) }}</div>
     </div> -->
-</div>
+    </div>
 
     <script>
-     //   const orangeLine = @json($orangeLine).map(v => v * 0.455); // Array from controller
-     const rawOrangeLine = @json($orangeLine).map(v => v * 0.5);
-     const orangeLine = smoothData(rawOrangeLine, 7); // smooth with window size 7
-     const rawBlueLine = @json($blueLine).map(v => v * 100);
-     const BlueLine = smoothData(rawBlueLine, 7); // smooth with window size 7
-
+        //   const orangeLine = @json($orangeLine).map(v => v * 0.455); // Array from controller
+        const rawOrangeLine = @json($orangeLine).map(v => v * 0.5);
+        const orangeLine = smoothData(rawOrangeLine, 7); // smooth with window size 7
+        const rawBlueLine = @json($blueLine).map(v => v * 100);
+        const BlueLine = smoothData(rawBlueLine, 7); // smooth with window size 7
+        const rawfilteredAvg = @json($filteredAvg);
+        const filteredAvg = smoothData(rawfilteredAvg, 7);
         const labels = @json($labels);
         //alert(labels);
         const ctx = document.getElementById('myChart');
-
+        const filAvgChart = document.getElementById('myChart_filteredAvg');
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -89,7 +94,7 @@
                         type: 'linear',
                         position: 'left',
                         min: 0, // Start from 0%
-                        max: 100,
+                        max: 120,
                         ticks: {
                             callback: value => value + '%',
                             stepSize: 10
@@ -113,15 +118,59 @@
                 }
             }
         });
+        new Chart(filAvgChart, {
+            type: 'line',
+            data: {
+                labels: labels, // Labeling from 1 to 600
+                datasets: [{
+                        label: 'Series 1',
+                        data: filteredAvg, // You can apply a scaling if necessary
+                        borderColor: 'blue',
+                        yAxisID: 'y',
+                        pointRadius: 0,
+                    },
+
+                ]
+            },
+            options: {
+                responsive: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                stacked: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: labels.length,
+                        ticks: {
+                            stepSize: 13
+                        }
+                    },
+                    y: {
+                        //type: 'linear',
+                        position: 'left',
+                        min: 0,
+                        max: 1.2,
+                        ticks: {
+                            stepSize: 0.2
+                        }
+                    },
+
+                }
+            }
+        });
         function smoothData(data, windowSize = 5) {
-    return data.map((val, idx, arr) => {
-        const start = Math.max(0, idx - Math.floor(windowSize / 2));
-        const end = Math.min(arr.length, idx + Math.floor(windowSize / 2) + 1);
-        const subset = arr.slice(start, end);
-        const avg = subset.reduce((a, b) => a + b, 0) / subset.length;
-        return avg;
-    });
-}
+            return data.map((val, idx, arr) => {
+                const start = Math.max(0, idx - Math.floor(windowSize / 2));
+                const end = Math.min(arr.length, idx + Math.floor(windowSize / 2) + 1);
+                const subset = arr.slice(start, end);
+                const avg = subset.reduce((a, b) => a + b, 0) / subset.length;
+                return avg;
+            });
+        }
     </script>
 </body>
 

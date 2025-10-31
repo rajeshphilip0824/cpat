@@ -29,6 +29,7 @@ class Corrison
     private $scanAxisIndex;
     private $minimumDeviation;
     private $remaininingWallMinAvg;
+    private $colCount = 0;
     public function __construct()
     {
         $this->calculateAScanMax();
@@ -45,7 +46,7 @@ class Corrison
         if (!is_array($this->wall_loss_percentage) && count($this->wall_loss_percentage)) {
             throw new Exception('Wall Percentage return empty array');
         }
-        //dd($this->wall_loss_percentage);
+     //   dd($this->wall_loss_percentage);
         $this->wall_loss_unit = $this->calculateWallLossInUnit($this->wall_loss_percentage);
         if (!is_array($this->wall_loss_unit) && count($this->wall_loss_unit)) {
             throw new Exception('Wall Percentage return empty array');
@@ -157,7 +158,7 @@ class Corrison
 
             // Default slice from current to next 4
             $start = $i;
-           // $length = 5;
+            // $length = 5;
 
             // If less than 5 rows ahead, adjust start to include previous ones
             if ($i + $windowSize > $total) {
@@ -356,9 +357,17 @@ class Corrison
             return array_map('floatval', $decoded);
         })->toArray();
         // dd($data);
-        $numCols = count($data[0]);
+
         $result = [];
-        // dd($numCols);
+        $lastValue = 0.0;
+
+        // Remove trailing elements equal to the last value
+        while (!empty($data[0]) && end($data[0]) === $lastValue) {
+            array_pop($data[0]);
+        }
+        $numCols = count($data[0]);
+        $this->colCount = $numCols;
+        //dd($data[0]);
         for ($col = 0; $col < $numCols; $col++) {
             $validValues = [];
             foreach ($data as $row) {
@@ -394,7 +403,7 @@ class Corrison
             return array_map('floatval', $decoded);
         })->toArray();
         //dd($data);
-        $numCols = count($data[0]);
+        $numCols = $this->colCount;
         $result = [];
         //dd($numCols);
         for ($col = 0; $col < $numCols; $col++) {
@@ -435,7 +444,7 @@ class Corrison
             return array_map('floatval', $decoded);
         })->toArray();
         // dd($data);
-        $numCols = count($data[0]);
+        $numCols = $this->colCount;
         $result = [];
 
         for ($col = 0; $col < $numCols; $col++) {
@@ -455,5 +464,8 @@ class Corrison
         $this->cm2 = $result;
         //dd($result); // Dump the result for debugging or use it further
 
+    }
+    public function getFilteredAvgWallPercentage(){
+        return $this->remaining_wall_percentage_filtered;
     }
 }

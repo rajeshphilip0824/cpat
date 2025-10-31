@@ -66,6 +66,8 @@ class Home extends Controller
         $thickness = Session::get('thickness');
         //Session::forget('thickness');
         $data = $service->calculate($thickness);
+        $filteredAvg = $service->getFilteredAvgWallPercentage();;
+        //dd($filteredAvg);
         $blueLine = $data[5]; // Example data
         $labels = range(1, count($data[5]));
         $orangeLine = $data[6];
@@ -76,7 +78,7 @@ class Home extends Controller
             return $v;
         }, $orangeLine);
         //dd($data);
-        return view('welcome',compact('data','labels','blueLine','orangeLine'));
+        return view('welcome',compact('data','labels','blueLine','orangeLine','filteredAvg'));
     }
     public function calculateTest(CorrisonTest $service){
 
