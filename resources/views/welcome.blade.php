@@ -20,7 +20,6 @@
 <body>
 
 
-<div class="flex flex-row">  <div class="basis-64">01</div>  <div class="basis-64">02</div>  <div class="basis-128">03</div></div>
 <div class="flex flex-wrap -mx-2">
     <!-- Chart Column -->
     <div class="w-full md:w-10/12 px-2 mb-4 md:mb-0">
