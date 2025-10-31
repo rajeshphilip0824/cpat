@@ -38,7 +38,12 @@
 </div>
 
     <script>
-        const orangeLine = @json($orangeLine).map(v => v * 0.455); // Array from controller
+     //   const orangeLine = @json($orangeLine).map(v => v * 0.455); // Array from controller
+     const rawOrangeLine = @json($orangeLine).map(v => v * 0.5);
+     const orangeLine = smoothData(rawOrangeLine, 7); // smooth with window size 7
+     const rawBlueLine = @json($blueLine).map(v => v * 100);
+     const BlueLine = smoothData(rawBlueLine, 7); // smooth with window size 7
+
         const labels = @json($labels);
         //alert(labels);
         const ctx = document.getElementById('myChart');
@@ -49,7 +54,7 @@
                 labels: labels, // Labeling from 1 to 600
                 datasets: [{
                         label: 'Series 1',
-                        data: @json($blueLine).map(v => v * 100), // You can apply a scaling if necessary
+                        data: BlueLine, // You can apply a scaling if necessary
                         borderColor: 'blue',
                         yAxisID: 'y',
                         pointRadius: 0,
@@ -108,6 +113,15 @@
                 }
             }
         });
+        function smoothData(data, windowSize = 5) {
+    return data.map((val, idx, arr) => {
+        const start = Math.max(0, idx - Math.floor(windowSize / 2));
+        const end = Math.min(arr.length, idx + Math.floor(windowSize / 2) + 1);
+        const subset = arr.slice(start, end);
+        const avg = subset.reduce((a, b) => a + b, 0) / subset.length;
+        return avg;
+    });
+}
     </script>
 </body>
 
