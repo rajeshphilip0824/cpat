@@ -1,6 +1,6 @@
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/inertia-vue3'
-
+import '../css/app.css'; // Tailwind
 // Automatically import all Vue pages
 const pages = import.meta.glob('./Pages/**/*.vue')
 

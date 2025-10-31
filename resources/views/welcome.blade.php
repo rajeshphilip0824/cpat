@@ -10,6 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,23 +18,30 @@
 </head>
 
 <body>
-    Min RWT (AVG-mm) - {{ number_format($data[0],2) }}
-
-    Min RWT (AVG-%) - {{ number_format($data[1],2) }}
-    Scan Axis (AVG-mm) - {{ $data[2] }}
-    CM Std Dev (dB) - {{ number_format($data[3],2) }}
 
 
-
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <div class="w-100" style="width: 100%; height: 600px;">
-        <canvas id="myChart"></canvas>
+<div class="flex flex-row">  <div class="basis-64">01</div>  <div class="basis-64">02</div>  <div class="basis-128">03</div></div>
+<div class="flex flex-wrap -mx-2">
+    <!-- Chart Column -->
+    <div class="w-full md:w-10/12 px-2 mb-4 md:mb-0">
+        <div class="w-full h-96 md:h-[500px]">
+            <canvas id="myChart" width="1000" class="w-full h-full"></canvas>
+        </div>
     </div>
-    <script>
-        const orangeLine = @json($orangeLine); // Array from controller
-        const labels = @json($labels);
 
+    <!-- Metrics Column -->
+    <!-- <div class="w-full md:w-2/12 px-2 flex flex-col justify-start space-y-2">
+    <div>Min RWT (AVG-mm) - {{ number_format($data[0],2) }}</div>
+        <div>Min RWT (AVG-%) - {{ number_format($data[1],2) }}</div>
+        <div>Scan Axis (AVG-mm) - {{ $data[2] }}</div>
+        <div>CM Std Dev (dB) - {{ number_format($data[3],2) }}</div>
+    </div> -->
+</div>
+
+    <script>
+        const orangeLine = @json($orangeLine).map(v => v * 0.455); // Array from controller
+        const labels = @json($labels);
+        //alert(labels);
         const ctx = document.getElementById('myChart');
 
         new Chart(ctx, {
@@ -41,21 +49,23 @@
             data: {
                 labels: labels, // Labeling from 1 to 600
                 datasets: [{
-                        label: 'Blue Line',
+                        label: 'Series 1',
                         data: @json($blueLine).map(v => v * 100), // You can apply a scaling if necessary
                         borderColor: 'blue',
                         yAxisID: 'y',
+                        pointRadius: 0,
                     },
                     {
-                        label: 'Orange Line',
+                        label: 'CM_SUM',
                         data: orangeLine,
                         borderColor: 'orange',
                         yAxisID: 'y1',
+                        pointRadius: 0,
                     }
                 ]
             },
             options: {
-                responsive: true,
+                responsive: false,
                 interaction: {
                     mode: 'index',
                     intersect: false
@@ -68,7 +78,7 @@
                         min: 0,
                         max: labels.length,
                         ticks: {
-                            stepSize: 50
+                            stepSize: 51
                         }
                     },
                     y: {
@@ -89,8 +99,12 @@
                         },
                         ticks: {
                             stepSize: 5,
-                            max: 20
-                        }
+                            callback: function(value) {
+                                return value;
+                            } // optional, formats ticks
+                        },
+                        suggestedMin: -30, // negative side
+                        suggestedMax: 30 // positive side
                     }
                 }
             }

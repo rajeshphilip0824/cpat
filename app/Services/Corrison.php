@@ -13,6 +13,7 @@ class Corrison
     private $wall_loss_unit;
     private $remaining_wall_unit;
     private $remaining_wall_percentage;
+    private $remaining_wall_percentage_filtered;
     private $nominal_weight = 10;
     private $avg_remaining_wall_percentage;
     private $avg_remaining_wall_graph;
@@ -60,12 +61,15 @@ class Corrison
         if (!is_array($this->remaining_wall_percentage) && count($this->remaining_wall_percentage)) {
             throw new Exception('Wall Percentage return empty array');
         }
-
-        $this->avg_remaining_wall_percentage = $this->calculateAvgRemainingWallInPercentage($this->remaining_wall_percentage, 10);
+        $this->remaining_wall_percentage_filtered = $this->calculateRemainingWallInPercentageFiltered($this->remaining_wall_percentage, 5);
+        if (!is_array($this->remaining_wall_percentage_filtered) && count($this->remaining_wall_percentage_filtered)) {
+            throw new Exception('Wall Percentage Filtered return empty array');
+        }
+        $this->avg_remaining_wall_percentage = $this->calculateAvgRemainingWallInPercentage($this->remaining_wall_percentage_filtered, 15);
         if (!is_array($this->avg_remaining_wall_percentage) && count($this->avg_remaining_wall_percentage)) {
             throw new Exception('Wall Percentage return empty array');
         }
-
+        //dd($this->avg_remaining_wall_percentage);
         $this->avg_remaining_wall_graph = $this->calculateAvgRemainingWallGraph($this->avg_remaining_wall_percentage);
         if (!is_array($this->avg_remaining_wall_graph) && count($this->avg_remaining_wall_graph)) {
             throw new Exception('Wall Percentage return empty array');
@@ -95,7 +99,7 @@ class Corrison
         if (!is_array($this->cm_avg) && count($this->cm_avg)) {
             throw new Exception('Wall Percentage return empty array');
         }
-       // dd($this->cm_avg);
+        // dd($this->cm_avg);
         $this->calculateMinRWTUnit();
         $this->calculateMinRWTPercentage();
         $this->calculateScanAxisUnit();
@@ -138,6 +142,42 @@ class Corrison
         $result = [];
         foreach ($data as $key => $value) {
             $result[] =  round($value / $this->nominal_weight, 9);
+        }
+        return $result;
+    }
+    public function calculateRemainingWallInPercentageFiltered($data, int $windowSize = 5)
+    {
+
+        //dd($data);
+        $result = [];
+        $total = count($data);
+
+        for ($i = 0; $i < $total; $i++) {
+            $current = $data[$i];
+
+            // Default slice from current to next 4
+            $start = $i;
+           // $length = 5;
+
+            // If less than 5 rows ahead, adjust start to include previous ones
+            if ($i + $windowSize > $total) {
+                $start = max(0, $total - $windowSize);
+            }
+
+            $window = array_slice($data, $start, $windowSize);
+            $maxNext = max($window);
+
+            if ($current < 0.85) {
+                // If all 5 values < 0.85 → keep current
+                if ($maxNext < 0.85) {
+                    $result[] = $current;
+                } else {
+                    // Otherwise take max in that 5-row window
+                    $result[] = $maxNext;
+                }
+            } else {
+                $result[] = $current;
+            }
         }
         return $result;
     }
@@ -303,9 +343,9 @@ class Corrison
     {
 
         $id = Session::get('pcValue');
-        Session::forget('pcValue');
+        // Session::forget('pcValue');
         // Fetch all rows as collections of objects
-        $rows = DB::table('pc_reading')->select('amplitude')->where('file_id',$id)->get();
+        $rows = DB::table('pc_reading')->select('amplitude')->where('file_id', $id)->get();
 
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array
@@ -318,7 +358,7 @@ class Corrison
         // dd($data);
         $numCols = count($data[0]);
         $result = [];
-       // dd($numCols);
+        // dd($numCols);
         for ($col = 0; $col < $numCols; $col++) {
             $validValues = [];
             foreach ($data as $row) {
@@ -340,10 +380,10 @@ class Corrison
     public function calculateCM1()
     {
 
-         $id = Session::get('cm1Value');
-        Session::forget('cm1Value');
+        $id = Session::get('cm1Value');
+        // Session::forget('cm1Value');
         // Fetch all rows as collections of objects
-        $rows = DB::table('cm1_reading')->select('amplitude')->where('file_id',$id)->get();
+        $rows = DB::table('cm1_reading')->select('amplitude')->where('file_id', $id)->get();
         //dd($rows);
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array
@@ -373,18 +413,18 @@ class Corrison
             }
         }
         $this->cm1 = $result;
-       // dd($result); // Dump the result for debugging or use it further
+        // dd($result); // Dump the result for debugging or use it further
 
     }
     public function calculateCM2()
     {
 
 
-         $id = Session::get('cm2Value');
-        Session::forget('cm2Value');
+        $id = Session::get('cm2Value');
+        // Session::forget('cm2Value');
 
         // Fetch all rows as collections of objects
-        $rows = DB::table('cm2_reading')->select('amplitude')->where('file_id',$id)->get();
+        $rows = DB::table('cm2_reading')->select('amplitude')->where('file_id', $id)->get();
 
         $data = $rows->map(function ($item) {
             $decoded = json_decode($item->amplitude, true); // decode JSON string to array

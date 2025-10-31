@@ -64,7 +64,7 @@ class Home extends Controller
     public function calculate(Corrison $service){
 
         $thickness = Session::get('thickness');
-        Session::forget('thickness');
+        //Session::forget('thickness');
         $data = $service->calculate($thickness);
         $blueLine = $data[5]; // Example data
         $labels = range(1, count($data[5]));
