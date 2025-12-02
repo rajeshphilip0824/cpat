@@ -13,10 +13,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // 🔥 Add session support back (Laravel 11 change)
+        $middleware->web(prepend: [
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
+
+        // 🔥 Add Inertia middleware
         $middleware->web(append: [
-            HandleInertiaRequests::class,
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+

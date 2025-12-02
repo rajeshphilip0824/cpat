@@ -6,7 +6,7 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
-class Corrison
+class CorrisonTest
 {
     private $a_scan_max;
     private $wall_loss_percentage;

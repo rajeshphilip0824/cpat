@@ -8,14 +8,22 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 class Home extends Controller
 {
     public function index(){
-        return view('upload');
+        $olympus = encrypt(1);
+        $eddfyi = encrypt(2);
+        return Inertia::render('Dashboard',compact('olympus','eddfyi'));
+    }
+    public function component($id){
+        $name = decrypt($id);
+        return Inertia::render('Machine',compact('name'));
     }
     public function upload(Request $request)
     {
+        //dd($request->all());
         $request->validate([
             'pc' => 'nullable|file|max:2048',
             'cm1' => 'nullable|file|max:4096',
@@ -54,7 +62,8 @@ class Home extends Controller
             ]);
             $cm2 = [$cm2id,$paths['cm2']];
         }
-        Session::put('thickness',$request->thickness);
+        //dd($cm2);
+        Session::put('thickness',10);
         Session::put('pcValue',$pc[0]);
         Session::put('cm1Value',$cm1[0]);
         Session::put('cm2Value',$cm2[0]);
@@ -95,6 +104,24 @@ class Home extends Controller
         //dd($data);
         return view('welcome',compact('data','labels','blueLine','orangeLine'));
     }
+    public function uploadPCFile(Request $request){
+        if ($request->hasFile('pc')) {
+            try{
+                $paths['pc'] = basename($request->file('pc')->store('pc', 'public'));
+                $pcid = DB::table('files')->insertGetId([
+                    'type'=>'pc',
+                    'file'=>$paths['pc']
+                ]);
+                $pc = [$pcid,$paths['pc']];
+                return back()->with(['status'=>'success','error'=>false,'message'=>"File uploaded"]);
+            } catch(Exception $e){
+                return back()->with(['status'=>'error','error'=>true,'message'=>$e->getMessage()]);
+            }
+        } else {
+            return back()->with(['message'=>'File not found','status'=>'error','error'=>true]);
+            //return json_encode(['status'=>'error','error'=>true,'message'=>'File not found']);
+        }
+    }
     public function test($pcA,$cm1A,$cm2A){
         //dd($pc[0],$cm1,$cm2);
         DB::beginTransaction();
@@ -105,6 +132,7 @@ class Home extends Controller
         $pc = array_map(function($line) {
             return str_getcsv($line, "\t");
         }, file(storage_path('app/public/pc/'.$pcA[1])));
+        //dd($pc);
         $cm1 = array_map(function($line) {
             return str_getcsv($line, "\t");
         }, file(storage_path('app/public/cm1/'.$cm1A[1])));
